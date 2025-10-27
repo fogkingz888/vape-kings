@@ -167,6 +167,12 @@ const ReportsScreen: React.FC<ReportsScreenProps> = ({ sales, productStockMap, s
             {/* AI Features Section */}
             <div className="bg-hiphop-950 p-6 rounded-sm shadow-lg border-2 border-hiphop-800">
                  <h3 className="text-3xl font-marker mb-4 text-hiphop-gold">AI-Powered Insights</h3>
+                 {stockForecasts.length === 0 && reorderSuggestions.length === 0 ? (
+                    <div className="text-center py-10">
+                        <p className="text-2xl font-bold text-hiphop-gray">Advanced AI Features Coming Soon!</p>
+                        <p className="text-hiphop-gray mt-2">Sales forecasting and smart reorder suggestions are currently in development.</p>
+                    </div>
+                ) : (
                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
                     <div>
                         <div className="flex justify-between items-center mb-4">
@@ -217,6 +223,7 @@ const ReportsScreen: React.FC<ReportsScreenProps> = ({ sales, productStockMap, s
                         </div>
                     </div>
                  </div>
+                )}
             </div>
         </div>
     );
