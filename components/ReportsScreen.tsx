@@ -31,7 +31,8 @@ const ReportsScreen: React.FC<ReportsScreenProps> = ({ sales, productStockMap, s
         const productSales = sales.reduce((acc, sale) => {
             // FIX: Ensure sale.quantity is treated as a number, not a string, to prevent concatenation which causes type errors in subsequent operations.
             // FIX: Cast sale.quantity to a number to prevent type errors during arithmetic operation.
-            acc[sale.product_id] = (acc[sale.product_id] || 0) + Number(sale.quantity);
+            // Fix: Ensure both operands are numbers to prevent string concatenation.
+            acc[sale.product_id] = (Number(acc[sale.product_id]) || 0) + Number(sale.quantity);
             return acc;
         }, {} as Record<string, number>);
 
