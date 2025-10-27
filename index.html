@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>VapeSmart PH</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&display=swap" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+              marker: ['"Permanent Marker"', 'cursive'],
+            },
+            colors: {
+              'hiphop-950': '#121212',
+              'hiphop-900': '#1a1a1a',
+              'hiphop-800': '#2a2a2a',
+              'hiphop-700': '#3a3a3a',
+              'hiphop-cyan': '#00f2ea',
+              'hiphop-magenta': '#ff00ff',
+              'hiphop-gold': '#ffd700',
+              'hiphop-light': '#f0f0f0',
+              'hiphop-gray': '#a0a0a0',
+            },
+          }
+        }
+      }
+    </script>
+    <style>
+      @media print {
+        body * {
+          visibility: hidden;
+        }
+        .printable-receipt, .printable-receipt * {
+          visibility: visible;
+        }
+        .printable-receipt {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 100%;
+        }
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.27.0",
+    "recharts": "https://aistudiocdn.com/recharts@^3.3.0",
+    "@supabase/supabase-js": "https://aistudiocdn.com/@supabase/supabase-js@^2.45.0"
+  }
+}
+</script>
+</head>
+  <body class="bg-hiphop-900 text-hiphop-light antialiased">
+    <div id="root"></div>
+  </body>
+</html>

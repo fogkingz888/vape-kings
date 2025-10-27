@@ -1,0 +1,7 @@
+{
+  "name": "VapeSmart PH",
+  "description": "A modern Vape Shop Management System for a small business in the Philippines, featuring AI-assisted stock management, sales tracking, and reporting.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
