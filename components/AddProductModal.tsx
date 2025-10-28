@@ -7,8 +7,8 @@ type ProductWithStock = Product & { stock: number };
 
 type ProductModalProps = {
   onClose: () => void;
-  onAddProduct: (newProduct: Omit<Product, 'id' | 'created_at'>, initialStock: number) => void;
-  onUpdateProduct: (updatedProduct: Product) => void;
+  onAddProduct: (newProduct: Omit<Product, 'id' | 'created_at'>, initialStock: number, imageFile?: File | null) => void;
+  onUpdateProduct: (updatedProduct: Product, imageFile?: File | null) => void;
   allProducts: ProductWithStock[];
   productToEdit?: ProductWithStock | null;
 };
@@ -93,12 +93,14 @@ const ProductModal: React.FC<ProductModalProps> = ({ onClose, onAddProduct, onUp
         const updatedProduct: Product = {
             ...(productToEdit as Product),
             ...(product as Partial<Product>),
-            image_url: imagePreview || productToEdit?.image_url || `https://picsum.photos/seed/${Date.now()}/200/200`,
+            // Use existing preview or old URL as a fallback for display before parent logic runs
+            image_url: imagePreview || productToEdit?.image_url || '',
         };
-        onUpdateProduct(updatedProduct);
+        onUpdateProduct(updatedProduct, imageFile);
     } else {
         const newProduct: Omit<Product, 'id' | 'created_at'> = {
-            image_url: imagePreview || `https://picsum.photos/seed/${Date.now()}/200/200`,
+            // Set a temporary value, parent will overwrite this.
+            image_url: imagePreview || '',
             name: product.name || 'N/A',
             brand: product.brand || 'N/A',
             category: product.category || 'N/A',
@@ -107,7 +109,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ onClose, onAddProduct, onUp
             size: product.size || 'N/A',
             barcode: product.barcode || 'N/A',
         };
-        onAddProduct(newProduct, initialStock);
+        onAddProduct(newProduct, initialStock, imageFile);
     }
     onClose();
   };

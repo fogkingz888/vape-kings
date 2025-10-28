@@ -1,3 +1,4 @@
+
 import React, { useMemo, useState } from 'react';
 import { Sale, Product, StockForecast, ReorderSuggestion } from '../types';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
@@ -15,7 +16,7 @@ type ReportsScreenProps = {
 const ReportsScreen: React.FC<ReportsScreenProps> = ({ sales, productStockMap, stockForecasts, reorderSuggestions }) => {
     const [selectedForecastProduct, setSelectedForecastProduct] = useState<string>(stockForecasts[0]?.product_id || '');
 
-    // FIX: Ensure total_price is treated as a number for correct aggregation.
+    // FIX: Coerce total_price to a number to prevent type errors during arithmetic operations.
     const totalRevenue = useMemo(() => sales.reduce((sum, sale) => sum + Number(sale.total_price), 0), [sales]);
     
     const salesToday = useMemo(() => {
@@ -23,16 +24,13 @@ const ReportsScreen: React.FC<ReportsScreenProps> = ({ sales, productStockMap, s
         return sales.filter(sale => sale.date.startsWith(today));
     }, [sales]);
 
-    // FIX: Ensure total_price is treated as a number for correct aggregation.
+    // FIX: Coerce total_price to a number to prevent type errors during arithmetic operations.
     const revenueToday = useMemo(() => salesToday.reduce((sum, sale) => sum + Number(sale.total_price), 0), [salesToday]);
 
     const topSellingProducts = useMemo(() => {
-        // FIX: Explicitly type the initial value for reduce to ensure correct type inference for productSales.
-        const productSales = sales.reduce((acc, sale) => {
-            // FIX: Ensure sale.quantity is treated as a number, not a string, to prevent concatenation which causes type errors in subsequent operations.
-            // FIX: Cast sale.quantity to a number to prevent type errors during arithmetic operation.
-            // Fix: Ensure both operands are numbers to prevent string concatenation.
-            acc[sale.product_id] = (Number(acc[sale.product_id]) || 0) + Number(sale.quantity);
+        const productSales = sales.reduce((acc: Record<string, number>, sale) => {
+            // FIX: Coerce quantity to a number to prevent type errors.
+            acc[sale.product_id] = (acc[sale.product_id] || 0) + Number(sale.quantity);
             return acc;
         }, {} as Record<string, number>);
 
@@ -48,12 +46,11 @@ const ReportsScreen: React.FC<ReportsScreenProps> = ({ sales, productStockMap, s
     const lowStockProducts = useMemo(() => productStockMap.filter(p => p.stock < 10), [productStockMap]);
 
     const salesOverTime = useMemo(() => {
-        // FIX: Ensure total_price is treated as a number for correct aggregation.
-        const salesByDate = sales.reduce((acc, sale) => {
+        const salesByDate = sales.reduce((acc: Record<string, number>, sale) => {
             const date = new Date(sale.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            // FIX: Coerce total_price to a number to prevent type errors during arithmetic operations.
             acc[date] = (acc[date] || 0) + Number(sale.total_price);
             return acc;
-        // FIX: Provide a typed initial value to ensure correct type inference for the reduce operation's result.
         }, {} as Record<string, number>);
         
         return Object.entries(salesByDate).map(([date, revenue]) => ({ date, revenue })).reverse().slice(0, 15).reverse();

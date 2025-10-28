@@ -1,20 +1,23 @@
 import React, { useState, useMemo, ChangeEvent } from 'react';
 import { Product, User, Role } from '../types';
 import ProductModal from './AddProductModal';
+import BarcodeScannerModal from './BarcodeScannerModal';
+import { BarcodeIcon } from './icons';
 
 type ProductWithStock = Product & { stock: number };
 
 type InventoryListProps = {
     user: User;
     productStockMap: ProductWithStock[];
-    onAddProduct: (newProduct: Omit<Product, 'id' | 'created_at'>, initialStock: number) => void;
+    onAddProduct: (newProduct: Omit<Product, 'id' | 'created_at'>, initialStock: number, imageFile?: File | null) => void;
     onUpdateStock: (productId: string, newQuantity: number, reason: string) => void;
-    onUpdateProduct: (updatedProduct: Product) => void;
+    onUpdateProduct: (updatedProduct: Product, imageFile?: File | null) => void;
     onDeleteProduct: (productId: string) => void;
 };
 
 const InventoryList: React.FC<InventoryListProps> = ({ user, productStockMap, onAddProduct, onUpdateStock, onUpdateProduct, onDeleteProduct }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isScannerOpen, setIsScannerOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState<ProductWithStock | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [editingStock, setEditingStock] = useState<{ [key: string]: string | number }>({});
@@ -29,6 +32,10 @@ const InventoryList: React.FC<InventoryListProps> = ({ user, productStockMap, on
         );
     }, [productStockMap, searchTerm]);
     
+    const lowStockProducts = useMemo(() => {
+        return productStockMap.filter(p => p.stock > 0 && p.stock < 10);
+    }, [productStockMap]);
+
     const handleEditClick = (product: ProductWithStock) => {
       setEditingProduct(product);
       setIsModalOpen(true);
@@ -63,6 +70,11 @@ const InventoryList: React.FC<InventoryListProps> = ({ user, productStockMap, on
         }
     };
     
+    const handleScan = (barcode: string) => {
+        setSearchTerm(barcode);
+        setIsScannerOpen(false);
+    };
+
     const getStockColor = (stock: number) => {
         if (stock < 10) return 'text-red-500';
         if (stock < 25) return 'text-yellow-400';
@@ -83,7 +95,7 @@ const InventoryList: React.FC<InventoryListProps> = ({ user, productStockMap, on
                 )}
             </div>
 
-            <div className="mb-6">
+            <div className="mb-6 flex items-center space-x-2">
                 <input
                     type="text"
                     placeholder="Search by name, brand, or barcode..."
@@ -91,7 +103,22 @@ const InventoryList: React.FC<InventoryListProps> = ({ user, productStockMap, on
                     onChange={(e: ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
                     className="w-full bg-hiphop-950 border-2 border-hiphop-700 rounded-sm py-2 px-4 focus:outline-none focus:ring-2 focus:ring-hiphop-cyan"
                 />
+                 <button
+                    onClick={() => setIsScannerOpen(true)}
+                    className="flex-shrink-0 bg-hiphop-cyan text-hiphop-950 p-3 rounded-sm hover:bg-opacity-80 transition-colors"
+                    aria-label="Scan barcode"
+                    title="Scan barcode"
+                >
+                    <BarcodeIcon className="w-6 h-6" />
+                </button>
             </div>
+
+            {lowStockProducts.length > 0 && (
+                <div className="bg-yellow-900 bg-opacity-30 border-l-4 border-yellow-400 text-yellow-100 p-4 mb-6 rounded-r-md" role="alert">
+                    <p className="font-bold">Low Stock Warning</p>
+                    <p>{lowStockProducts.length} product{lowStockProducts.length > 1 ? 's are' : ' is'} running low on stock.</p>
+                </div>
+            )}
 
             <div className="bg-hiphop-950 rounded-sm shadow-xl overflow-hidden border-2 border-hiphop-800">
                 <div className="overflow-x-auto">
@@ -167,6 +194,13 @@ const InventoryList: React.FC<InventoryListProps> = ({ user, productStockMap, on
                     onUpdateProduct={onUpdateProduct}
                     allProducts={productStockMap}
                     productToEdit={editingProduct}
+                />
+            )}
+
+            {isScannerOpen && (
+                <BarcodeScannerModal
+                    onScan={handleScan}
+                    onClose={() => setIsScannerOpen(false)}
                 />
             )}
         </div>

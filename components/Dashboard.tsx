@@ -179,8 +179,47 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, businessName, onB
     setIsPrinterEnabled(prev => !prev);
   }, []);
 
-  const handleAddProduct = async (newProductData: Omit<Product, 'id' | 'created_at'>, initialStock: number) => {
-    const { data: newProduct, error: productError } = await supabase.from('products').insert(newProductData).select().single();
+  const uploadProductImage = async (file: File): Promise<string | null> => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}_${Math.random()}.${fileExt}`;
+    const filePath = `products/${fileName}`;
+
+    try {
+        const { error: uploadError } = await supabase.storage
+            .from('product_images') // NOTE: Bucket 'product_images' must exist and have public read access.
+            .upload(filePath, file);
+        
+        if (uploadError) {
+            throw uploadError;
+        }
+    
+        const { data } = supabase.storage
+            .from('product_images')
+            .getPublicUrl(filePath);
+    
+        return data.publicUrl;
+    } catch (error) {
+        console.error('Error uploading image:', error);
+        alert('Image upload failed. Please try again.');
+        return null;
+    }
+  };
+
+  const handleAddProduct = async (newProductData: Omit<Product, 'id' | 'created_at'>, initialStock: number, imageFile?: File | null) => {
+    let finalProductData = { ...newProductData };
+
+    if (imageFile) {
+        const publicUrl = await uploadProductImage(imageFile);
+        if (publicUrl) {
+            finalProductData.image_url = publicUrl;
+        } else {
+            finalProductData.image_url = `https://picsum.photos/seed/${Date.now()}/200/200`;
+        }
+    } else {
+        finalProductData.image_url = `https://picsum.photos/seed/${Date.now()}/200/200`;
+    }
+
+    const { data: newProduct, error: productError } = await supabase.from('products').insert(finalProductData).select().single();
     if (productError) { console.error(productError); return; }
     if (newProduct) {
         const newStock: Omit<StockLevel, 'id'> = {
@@ -194,14 +233,24 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, businessName, onB
     }
   };
 
-  const handleUpdateProduct = async (updatedProduct: Product) => {
+  const handleUpdateProduct = async (updatedProductData: Product, imageFile?: File | null) => {
     if (user.role !== Role.Owner) {
         alert("You are not authorized to perform this action.");
         return;
     }
-    const { error } = await supabase.from('products').update(updatedProduct).eq('id', updatedProduct.id);
+
+    let finalProductData = { ...updatedProductData };
+
+    if (imageFile) {
+        const publicUrl = await uploadProductImage(imageFile);
+        if (publicUrl) {
+            finalProductData.image_url = publicUrl;
+        }
+    }
+
+    const { error } = await supabase.from('products').update(finalProductData).eq('id', finalProductData.id);
     if (error) console.error(error);
-    else addAuditLog('Update Product', `Updated details for product: ${updatedProduct.name}.`);
+    else addAuditLog('Update Product', `Updated details for product: ${finalProductData.name}.`);
   };
 
   const handleDeleteProduct = async (productId: string) => {

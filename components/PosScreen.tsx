@@ -2,6 +2,7 @@ import React, { useState, useMemo, ChangeEvent } from 'react';
 import { Product } from '../types';
 import { BarcodeIcon } from './icons';
 import PrintReceiptModal from './PrintReceiptModal';
+import BarcodeScannerModal from './BarcodeScannerModal';
 
 type ProductWithStock = Product & { stock: number };
 
@@ -29,6 +30,7 @@ const PosScreen: React.FC<PosScreenProps> = ({ productStockMap, onNewSale, isPri
     const [cart, setCart] = useState<CartItem[]>([]);
     const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
     const [saleToPrint, setSaleToPrint] = useState<CompletedSale | null>(null);
+    const [isScannerOpen, setIsScannerOpen] = useState(false);
 
     const filteredProducts = useMemo(() => {
         if (!searchTerm) return [];
@@ -92,19 +94,23 @@ const PosScreen: React.FC<PosScreenProps> = ({ productStockMap, onNewSale, isPri
         setCart([]); // Clear cart after modal is closed
     };
 
-    const handleBarcodeScan = () => {
-        const barcode = prompt("Scan or enter barcode:");
-        if (barcode) {
-            const trimmedBarcode = barcode.trim();
-            setSearchTerm(trimmedBarcode);
-            const product = productStockMap.find(p => p.barcode === trimmedBarcode);
-            if (product) {
-                addToCart(product);
+    const handleScan = (barcode: string) => {
+        const trimmedBarcode = barcode.trim();
+        const product = productStockMap.find(p => p.barcode === trimmedBarcode && p.stock > 0);
+
+        if (product) {
+            addToCart(product);
+        } else {
+            const outOfStockProduct = productStockMap.find(p => p.barcode === trimmedBarcode);
+            if (outOfStockProduct) {
+                alert(`Product "${outOfStockProduct.name}" is out of stock.`);
             } else {
                 alert("Product not found for this barcode.");
             }
         }
+        setIsScannerOpen(false);
     };
+
 
     return (
         <>
@@ -121,7 +127,7 @@ const PosScreen: React.FC<PosScreenProps> = ({ productStockMap, onNewSale, isPri
                                 onChange={(e: ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
                                 className="w-full bg-hiphop-800 border-2 border-hiphop-700 rounded-sm py-3 px-4 text-lg focus:outline-none focus:ring-2 focus:ring-hiphop-cyan"
                             />
-                            <button onClick={handleBarcodeScan} className="p-3 bg-hiphop-700 hover:bg-hiphop-800 rounded-sm text-hiphop-cyan transition-colors">
+                            <button onClick={() => setIsScannerOpen(true)} className="p-3 bg-hiphop-700 hover:bg-hiphop-800 rounded-sm text-hiphop-cyan transition-colors" aria-label="Scan barcode" title="Scan barcode">
                                 <BarcodeIcon className="w-7 h-7" />
                             </button>
                         </div>
@@ -207,6 +213,12 @@ const PosScreen: React.FC<PosScreenProps> = ({ productStockMap, onNewSale, isPri
                 saleData={saleToPrint}
                 businessName={businessName}
             />
+            {isScannerOpen && (
+                <BarcodeScannerModal
+                    onScan={handleScan}
+                    onClose={() => setIsScannerOpen(false)}
+                />
+            )}
         </>
     );
 };
